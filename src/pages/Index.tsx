@@ -9,44 +9,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 const Index = () => {
   const navigate = useNavigate();
 
-  const handleNavigation = (path: string) => {
-    console.log('Navigating to:', path);
-    navigate(path);
-  };
-
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
       <main>
         <Hero />
         <RecommendationSection />
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="flex items-center justify-center py-16 px-4">
           <Card className="w-full max-w-md">
             <CardHeader>
-              <CardTitle className="text-2xl text-center">Welcome to FounderBridge</CardTitle>
+              <CardTitle className="text-2xl text-center">Join FounderBridge Today</CardTitle>
               <CardDescription className="text-center">
-                Connect with the right talent or find your next startup opportunity
+                Start your journey to find the perfect match for your startup
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
-                className="w-full"
-                onClick={() => handleNavigation('/auth/developer')}
+                className="w-full h-12 text-lg"
+                onClick={() => navigate('/auth/developer')}
               >
                 Join as Developer
               </Button>
               <Button
-                className="w-full"
+                className="w-full h-12 text-lg"
                 variant="outline"
-                onClick={() => handleNavigation('/auth/recruiter')}
+                onClick={() => navigate('/auth/recruiter')}
               >
                 Join as Recruiter
               </Button>
             </CardContent>
           </Card>
         </div>
-        <Footer />
       </main>
+      <Footer />
     </div>
   );
 };

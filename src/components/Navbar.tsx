@@ -1,9 +1,27 @@
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Button } from "@/components/ui/button"
+import { Link, useNavigate } from "react-router-dom"
+import { useEffect, useRef, useState } from "react"
 
 export const Navbar = () => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleNavigation = (path: string) => {
+    setIsDropdownOpen(false)
+    navigate(path)
+  }
 
   return (
     <nav className="border-b bg-white/80 backdrop-blur-sm fixed w-full z-10">
@@ -13,29 +31,36 @@ export const Navbar = () => {
             FounderBridge
           </Link>
           <div className="flex gap-4 items-center">
-            <Button>
+            <Button variant="ghost" onClick={() => navigate('/login')}>
               Login
             </Button>
-            <div className="relative">
-              <Button onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+            <div className="relative" ref={dropdownRef}>
+              <Button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                variant="default"
+              >
                 Sign Up
               </Button>
-              <div className={`absolute right-0 mt-2 w-60 bg-white border rounded-md shadow-lg transition-all duration-200 ${
-                isDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-              }`}>
-                <div className="py-2">
-                  <Link to="/signup/recruiter" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-500">
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-60 bg-white border rounded-md shadow-lg py-2">
+                  <button
+                    onClick={() => handleNavigation('/auth/recruiter')}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary transition-colors"
+                  >
                     I'm looking for candidates
-                  </Link>
-                  <Link to="/signup/candidate" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-500">
+                  </button>
+                  <button
+                    onClick={() => handleNavigation('/auth/developer')}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary transition-colors"
+                  >
                     I'm looking for a job
-                  </Link>
+                  </button>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
       </div>
     </nav>
-  );
-};
+  )
+}
