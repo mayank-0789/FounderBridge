@@ -10,6 +10,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocation } from "react-router-dom";
+import { z } from "zod";
 
 interface FormData {
   firstName: string;
@@ -24,21 +28,72 @@ interface FormData {
   graduationYear: string;
 }
 
-export const DeveloperSignup = () => {
+const formSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().email(),
+  experience: z.string(),
+  skills: z.string(),
+  bio: z.string(),
+  github: z.string(),
+  university: z.string(),
+  degree: z.string(),
+  graduationYear: z.string(),
+});
+
+const DeveloperSignup = () => {
+  const location = useLocation();
+  const authData = location.state || {};
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProfileCreated, setIsProfileCreated] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    experience: '',
-    skills: '',
-    bio: '',
-    github: '',
-    university: '',
-    degree: '',
-    graduationYear: ''
+
+  // Split the name from auth data
+  const nameParts = authData.name?.split(' ') || ['', ''];
+  const defaultFirstName = nameParts[0];
+  const defaultLastName = nameParts.slice(1).join(' ');
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: defaultFirstName,
+      lastName: defaultLastName,
+      email: authData.email || "",
+      experience: "",
+      skills: "",
+      bio: "",
+      github: "",
+      university: "",
+      degree: "",
+      graduationYear: ""
+    },
   });
-  
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    form.setValue(e.target.id, e.target.value);
+  };
+
+  const handleSelectChange = (value: string, field: keyof FormData) => {
+    form.setValue(field, value);
+  };
+
+  const isFormValid = () => {
+    return form.formState.isValid;
+  };
+
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      setIsSubmitting(true);
+      console.log('Form data:', data);
+      // TODO: Add your API call here to save the developer profile
+      // await saveDeveloperProfile(data);
+      setIsProfileCreated(true);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Mock opportunities data
   const mockOpportunities = [
     {
@@ -62,33 +117,6 @@ export const DeveloperSignup = () => {
       funding: "Series A - $2M raised"
     }
   ];
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value
-    });
-  };
-
-  const handleSelectChange = (value: string, field: keyof FormData) => {
-    setFormData({
-      ...formData,
-      [field]: value
-    });
-  };
-
-  const isFormValid = () => {
-    return Object.values(formData).every(value => value.trim() !== '');
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isFormValid()) {
-      setIsProfileCreated(true);
-    } else {
-      alert('Please fill in all fields before submitting');
-    }
-  };
 
   if (isProfileCreated) {
     return (
@@ -148,7 +176,7 @@ export const DeveloperSignup = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
@@ -167,8 +195,7 @@ export const DeveloperSignup = () => {
                   <Input 
                     id="firstName" 
                     placeholder="John" 
-                    value={formData.firstName}
-                    onChange={handleInputChange}
+                    {...form.register("firstName")}
                     required
                   />
                 </div>
@@ -177,8 +204,7 @@ export const DeveloperSignup = () => {
                   <Input 
                     id="lastName" 
                     placeholder="Doe" 
-                    value={formData.lastName}
-                    onChange={handleInputChange}
+                    {...form.register("lastName")}
                     required
                   />
                 </div>
@@ -190,8 +216,7 @@ export const DeveloperSignup = () => {
                   id="email" 
                   type="email" 
                   placeholder="john@example.com" 
-                  value={formData.email}
-                  onChange={handleInputChange}
+                  {...form.register("email")}
                   required
                 />
               </div>
@@ -216,8 +241,7 @@ export const DeveloperSignup = () => {
                 <Input 
                   id="skills" 
                   placeholder="e.g., React, Node.js, Python" 
-                  value={formData.skills}
-                  onChange={handleInputChange}
+                  {...form.register("skills")}
                   required
                 />
               </div>
@@ -228,8 +252,7 @@ export const DeveloperSignup = () => {
                   id="bio"
                   className="w-full min-h-[100px] p-3 border rounded-md"
                   placeholder="Tell us about yourself..."
-                  value={formData.bio}
-                  onChange={handleInputChange}
+                  {...form.register("bio")}
                   required
                 />
               </div>
@@ -244,8 +267,7 @@ export const DeveloperSignup = () => {
                     id="github" 
                     className="rounded-l-none" 
                     placeholder="username" 
-                    value={formData.github}
-                    onChange={handleInputChange}
+                    {...form.register("github")}
                     required
                   />
                 </div>
@@ -256,8 +278,7 @@ export const DeveloperSignup = () => {
                 <Input 
                   id="university" 
                   placeholder="e.g., Stanford University" 
-                  value={formData.university}
-                  onChange={handleInputChange}
+                  {...form.register("university")}
                   required
                 />
               </div>
@@ -268,8 +289,7 @@ export const DeveloperSignup = () => {
                   <Input 
                     id="degree" 
                     placeholder="e.g., BS Computer Science" 
-                    value={formData.degree}
-                    onChange={handleInputChange}
+                    {...form.register("degree")}
                     required
                   />
                 </div>
@@ -296,10 +316,12 @@ export const DeveloperSignup = () => {
           </CardContent>
           <CardFooter className="flex justify-end space-x-4">
             <Button type="button" variant="outline">Cancel</Button>
-            <Button type="submit" disabled={!isFormValid()}>Create Profile</Button>
+            <Button type="submit" disabled={!isFormValid() || isSubmitting}>Create Profile</Button>
           </CardFooter>
         </Card>
       </div>
     </form>
   );
 };
+
+export default DeveloperSignup;
