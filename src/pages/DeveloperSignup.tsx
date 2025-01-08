@@ -38,7 +38,6 @@ export const DeveloperSignup = () => {
   const defaultFirstName = nameParts[0];
   const defaultLastName = nameParts.slice(1).join(' ');
 
-  const [isProfileCreated, setIsProfileCreated] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: defaultFirstName,
     lastName: defaultLastName,
@@ -51,30 +50,6 @@ export const DeveloperSignup = () => {
     degree: '',
     graduationYear: ''
   });
-  
-  // Mock opportunities data
-  const mockOpportunities = [
-    {
-      id: 1,
-      companyName: "TechStart Innovation",
-      role: "Lead Full Stack Developer",
-      equity: "3-5%",
-      description: "Looking for a technical co-founder to build our MVP. We're disrupting the EdTech space.",
-      requirements: ["5+ years experience", "React/Node.js", "System Architecture"],
-      terms: "3-month trial period, full-time commitment required",
-      funding: "Seed funded - $500K"
-    },
-    {
-      id: 2,
-      companyName: "AI Solutions Co",
-      role: "Senior AI Engineer",
-      equity: "2-4%",
-      description: "Building next-gen AI tools for enterprise customers. Series A startup.",
-      requirements: ["ML/AI experience", "Python", "Cloud Architecture"],
-      terms: "Immediate start, flexible hours",
-      funding: "Series A - $2M raised"
-    }
-  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -94,93 +69,11 @@ export const DeveloperSignup = () => {
     return Object.values(formData).every(value => value.trim() !== '');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isFormValid()) {
-      setIsProfileCreated(true);
-    } else {
-      alert('Please fill in all fields before submitting');
-    }
-  };
-
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.5 }
   };
-
-  if (isProfileCreated) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8"
-      >
-        <div className="max-w-4xl mx-auto">
-          <motion.h2 
-            {...fadeIn}
-            className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent"
-          >
-            Matching Opportunities
-          </motion.h2>
-          <div className="space-y-6">
-            {mockOpportunities.map((opportunity, index) => (
-              <motion.div
-                key={opportunity.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.2 }}
-              >
-                <Card className="hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-xl font-semibold text-primary">
-                          {opportunity.companyName}
-                        </h3>
-                        <p className="text-lg font-medium mt-1">{opportunity.role}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                          {opportunity.equity} Equity
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <p className="mt-4 text-gray-600">{opportunity.description}</p>
-                    
-                    <div className="mt-4">
-                      <h4 className="font-medium">Requirements:</h4>
-                      <ul className="list-disc list-inside mt-2 text-gray-600">
-                        {opportunity.requirements.map((req, index) => (
-                          <li key={index}>{req}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    <div className="mt-4 grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-medium">Terms:</h4>
-                        <p className="text-gray-600">{opportunity.terms}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">Funding Status:</h4>
-                        <p className="text-gray-600">{opportunity.funding}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-6 flex justify-end">
-                      <Button>Apply Now</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div 
@@ -238,10 +131,7 @@ export const DeveloperSignup = () => {
             </div>
           </div>
           <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-gray-100">
-            {/* <blockquote className="text-gray-700 italic">
-              "FounderBridge helped me find the perfect startup opportunity where I could make a real impact while getting significant equity."
-            </blockquote> */}
-           
+            {/* Quote section if needed */}
           </div>
         </motion.div>
 
@@ -251,7 +141,7 @@ export const DeveloperSignup = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <form onSubmit={handleSubmit}>
+          <form>
             <Card className="border-none shadow-xl">
               <CardHeader>
                 <motion.h2 
@@ -443,13 +333,14 @@ export const DeveloperSignup = () => {
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={!isFormValid()}
-                  className="bg-gradient-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity"
-                >
-                  Create Profile
-                </Button>
+                <Link to="/developerdashboard">
+                  <Button 
+                    disabled={!isFormValid()}
+                    className="bg-gradient-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity"
+                  >
+                    Create Profile
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           </form>

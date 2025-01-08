@@ -211,9 +211,13 @@ export const RecruiterSignup = () => {
               </motion.div>
             </CardContent>
             <CardFooter>
+              <Link to="/recruiterdashboard">
+               
+
               <Button className="w-full bg-gradient-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity">
                 Create Profile
               </Button>
+              </Link>
             </CardFooter>
           </Card>
         </motion.div>
