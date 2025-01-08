@@ -14,7 +14,9 @@ import { motion } from "framer-motion";
 import { FaGithub } from "react-icons/fa";
 import { HiOutlineAcademicCap } from "react-icons/hi";
 import { BsBriefcase } from "react-icons/bs";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { saveUserData } from "@/lib/user";
+import { useToast } from "@/components/ui/use-toast";
 
 interface FormData {
   firstName: string;
@@ -31,7 +33,13 @@ interface FormData {
 
 export const DeveloperSignup = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const authData = location.state || {};
+  
+  if (!authData.uid) {
+    navigate('/auth/developer', { replace: true });
+  }
   
   // Split the name from auth data
   const nameParts = authData.name?.split(' ') || ['', ''];
@@ -67,6 +75,60 @@ export const DeveloperSignup = () => {
 
   const isFormValid = () => {
     return Object.values(formData).every(value => value.trim() !== '');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const userData = {
+        ...authData,
+        userType: 'developer' as const,
+        skills: formData.skills.split(',').map(skill => skill.trim()),
+        experience: formData.experience,
+        githubUrl: formData.github,
+        bio: formData.bio,
+        education: {
+          university: formData.university,
+          degree: formData.degree,
+          graduationYear: formData.graduationYear
+        }
+      };
+
+      console.log('Submitting user data:', userData);
+
+      await saveUserData(userData);
+      
+      toast({
+        title: "Profile Created",
+        description: "Your developer profile has been created successfully!",
+        variant: "default"
+      });
+
+      setIsProfileCreated(true);
+      
+      // Redirect to dashboard or home page
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      
+      let errorMessage = 'Failed to create profile. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('permission-denied') || error.message.includes('unauthenticated')) {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
   };
 
   const fadeIn = {
@@ -272,7 +334,7 @@ export const DeveloperSignup = () => {
                 </motion.div>
 
                 {/* Education Section */}
-                <motion.div {...fadeIn} transition={{ delay: 0.5 }}>
+                <motion.div {...fadeIn} transition={{ delay: 0.4 }}>
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <span className="p-2 bg-primary/10 rounded-lg">
                       <HiOutlineAcademicCap className="text-primary" />
@@ -281,10 +343,10 @@ export const DeveloperSignup = () => {
                   </h3>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="university">College/University</Label>
+                      <Label htmlFor="university">University/College</Label>
                       <Input 
                         id="university" 
-                        placeholder="e.g., Stanford University" 
+                        placeholder="e.g., University of Technology" 
                         value={formData.university}
                         onChange={handleInputChange}
                         required
@@ -292,55 +354,36 @@ export const DeveloperSignup = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="degree">Degree & Major</Label>
+                      <Label htmlFor="degree">Degree</Label>
                       <Input 
                         id="degree" 
-                        placeholder="e.g., BS Computer Science" 
+                        placeholder="e.g., B.S. Computer Science" 
                         value={formData.degree}
                         onChange={handleInputChange}
                         required
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="graduationYear">Graduation Year</Label>
-                        <Select onValueChange={(value) => handleSelectChange(value, 'graduationYear')} required>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select year" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white">
-                            {Array.from({ length: 10 }, (_, i) => {
-                              const year = new Date().getFullYear() - i;
-                              return (
-                                <SelectItem key={year} value={year.toString()}>
-                                  {year}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="graduationYear">Graduation Year</Label>
+                      <Input 
+                        id="graduationYear" 
+                        placeholder="e.g., 2023" 
+                        value={formData.graduationYear}
+                        onChange={handleInputChange}
+                        required
+                      />
                     </div>
                   </div>
                 </motion.div>
               </CardContent>
-              <CardFooter className="flex justify-end space-x-4">
+              <CardFooter>
                 <Button 
-                  type="button" 
-                  variant="outline"
-                  className="hover:bg-gray-100 transition-colors"
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity"
                 >
-                  Cancel
+                  Create Profile
                 </Button>
-                <Link to="/developerdashboard">
-                  <Button 
-                    disabled={!isFormValid()}
-                    className="bg-gradient-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity"
-                  >
-                    Create Profile
-                  </Button>
-                </Link>
               </CardFooter>
             </Card>
           </form>

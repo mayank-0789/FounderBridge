@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Github, Mail, Loader2 } from 'lucide-react'
 import { useToast } from "@/components/ui/use-toast"
+import { UserData } from '@/lib/user'
 
 type AuthSignupProps = {
   userType: 'developer' | 'recruiter'
@@ -31,11 +32,12 @@ export function AuthSignup({ userType }: AuthSignupProps) {
         throw new Error('No email provided from authentication provider')
       }
 
-      const userData = {
+      const userData: Partial<UserData> = {
         name: result.user.displayName || '',
         email: result.user.email,
         photoURL: result.user.photoURL || '',
-        uid: result.user.uid
+        uid: result.user.uid,
+        userType: userType
       }
 
       console.log('Navigating to signup with user data:', userData)

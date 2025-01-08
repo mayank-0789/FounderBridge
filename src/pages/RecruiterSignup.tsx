@@ -12,9 +12,92 @@ import {
 import { motion } from "framer-motion";
 import { BsBuilding, BsCurrencyDollar } from "react-icons/bs";
 import { HiOutlineDocumentText } from "react-icons/hi";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { saveUserData } from "@/lib/user";
+import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+
+interface FormData {
+  company: string;
+  role: string;
+  companySize: string;
+  industry: string;
+  companyWebsite: string;
+  linkedinUrl: string;
+  bio: string;
+}
 
 export const RecruiterSignup = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const authData = location.state || {};
+  
+  if (!authData.uid) {
+    navigate('/auth/recruiter', { replace: true });
+  }
+
+  const [formData, setFormData] = useState<FormData>({
+    company: '',
+    role: '',
+    companySize: '',
+    industry: '',
+    companyWebsite: '',
+    linkedinUrl: '',
+    bio: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const userData = {
+        ...authData,
+        userType: 'recruiter' as const,
+        ...formData
+      };
+
+      console.log('Submitting user data:', userData);
+
+      await saveUserData(userData);
+      
+      toast({
+        title: "Profile Created",
+        description: "Your recruiter profile has been created successfully!",
+        variant: "default"
+      });
+
+      // Redirect to dashboard or home page
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      
+      let errorMessage = 'Failed to create profile. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('permission-denied') || error.message.includes('unauthenticated')) {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -88,137 +171,127 @@ export const RecruiterSignup = () => {
                 Let's create your recruiter profile to find talented developers
               </p>
             </CardHeader>
-            <CardContent className="space-y-8">
-              {/* Basic Information */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <span className="p-2 bg-primary/10 rounded-lg">
-                    <BsBuilding className="text-primary" />
-                  </span>
-                  Company Details
-                </h3>
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input id="companyName" placeholder="e.g., Tech Innovations Inc." />
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <CardContent className="space-y-8">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span className="p-2 bg-primary/10 rounded-lg">
+                      <BsBuilding className="text-primary" />
+                    </span>
+                    Company Details
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="company">Company Name</Label>
+                      <Input 
+                        id="company" 
+                        placeholder="e.g., Tech Innovations Inc." 
+                        value={formData.company}
+                        onChange={(e) => handleInputChange('company', e.target.value)}
+                        required
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="companyWebsite">Company Website</Label>
-                  <Input id="companyWebsite" placeholder="e.g., https://example.com" />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Your Role</Label>
+                      <Input 
+                        id="role" 
+                        placeholder="e.g., Founder, CTO, HR Manager" 
+                        value={formData.role}
+                        onChange={(e) => handleInputChange('role', e.target.value)}
+                        required
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="companySize">Company Size</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select company size" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="1-10">1-10 employees</SelectItem>
-                      <SelectItem value="11-50">11-50 employees</SelectItem>
-                      <SelectItem value="51-200">51-200 employees</SelectItem>
-                      <SelectItem value="201-500">201-500 employees</SelectItem>
-                      <SelectItem value="500+">500+ employees</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="companySize">Company Size</Label>
+                      <Select 
+                        value={formData.companySize}
+                        onValueChange={(value) => handleInputChange('companySize', value)}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select company size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1-10">1-10 employees</SelectItem>
+                          <SelectItem value="11-50">11-50 employees</SelectItem>
+                          <SelectItem value="51-200">51-200 employees</SelectItem>
+                          <SelectItem value="201-500">201-500 employees</SelectItem>
+                          <SelectItem value="500+">500+ employees</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="fundingStage">Funding Stage</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select funding stage" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="bootstrap">Bootstrapped</SelectItem>
-                      <SelectItem value="seed">Seed</SelectItem>
-                      <SelectItem value="seriesA">Series A</SelectItem>
-                      <SelectItem value="seriesB">Series B</SelectItem>
-                      <SelectItem value="seriesC">Series C+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </motion.div>
+                    <div className="space-y-2">
+                      <Label htmlFor="industry">Industry</Label>
+                      <Select
+                        value={formData.industry}
+                        onValueChange={(value) => handleInputChange('industry', value)}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select industry" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="technology">Technology</SelectItem>
+                          <SelectItem value="fintech">Fintech</SelectItem>
+                          <SelectItem value="healthcare">Healthcare</SelectItem>
+                          <SelectItem value="ecommerce">E-commerce</SelectItem>
+                          <SelectItem value="education">Education</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              {/* Equity and Compensation */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <span className="p-2 bg-primary/10 rounded-lg">
-                    <BsCurrencyDollar className="text-primary" />
-                  </span>
-                  Equity & Compensation
-                </h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="equityRange">Equity Range (%)</Label>
-                    <Input id="equityRange" placeholder="e.g., 0.5-2.0" />
+                    <div className="space-y-2">
+                      <Label htmlFor="companyWebsite">Company Website</Label>
+                      <Input 
+                        id="companyWebsite" 
+                        placeholder="e.g., https://example.com" 
+                        value={formData.companyWebsite}
+                        onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
+                      <Input 
+                        id="linkedinUrl" 
+                        placeholder="e.g., https://linkedin.com/in/yourprofile" 
+                        value={formData.linkedinUrl}
+                        onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bio">Company Description</Label>
+                      <Input 
+                        id="bio" 
+                        placeholder="Tell us about your company and what you're building..." 
+                        value={formData.bio}
+                        onChange={(e) => handleInputChange('bio', e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="salaryRange">Salary Range ($)</Label>
-                    <Input id="salaryRange" placeholder="e.g., 80k-120k" />
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Role Details */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <span className="p-2 bg-primary/10 rounded-lg">
-                    <HiOutlineDocumentText className="text-primary" />
-                  </span>
-                  Role Details
-                </h3>
-                <div className="space-y-2">
-                  <Label htmlFor="roleDescription">Role Description</Label>
-                  <textarea 
-                    id="roleDescription"
-                    className="w-full min-h-[100px] p-3 border rounded-md"
-                    placeholder="Describe the role, responsibilities, and what you're looking for in a candidate..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="techStack">Required Tech Stack</Label>
-                  <Input id="techStack" placeholder="e.g., React, Node.js, Python" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="experienceRequired">Experience Required</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select required experience" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="0-1">0-1 years</SelectItem>
-                      <SelectItem value="1-3">1-3 years</SelectItem>
-                      <SelectItem value="3-5">3-5 years</SelectItem>
-                      <SelectItem value="5+">5+ years</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </motion.div>
-            </CardContent>
-            <CardFooter>
-              <Link to="/recruiterdashboard">
-               
-
-              <Button className="w-full bg-gradient-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity">
-                Create Profile
-              </Button>
-              </Link>
-            </CardFooter>
+                </motion.div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity"
+                >
+                  Create Profile
+                </Button>
+              </CardFooter>
+            </form>
           </Card>
         </motion.div>
       </div>
